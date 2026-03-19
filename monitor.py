@@ -3,6 +3,9 @@ import json
 import os
 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
+# GitHubが自動で発行してくれる合言葉を受け取るニャ
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 REPOS = [
     {"name": "yt-dlp", "url": "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"},
     {"name": "pytchat", "url": "https://api.github.com/repos/taizan-85/pytchat/releases/latest"}
@@ -10,27 +13,22 @@ REPOS = [
 VERSION_FILE = "last_versions.json"
 
 def check_updates():
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
     last_versions = {}
     if os.path.exists(VERSION_FILE):
         with open(VERSION_FILE, "r") as f: last_versions = json.load(f)
 
     updated = False
     for repo in REPOS:
-        print(f"🔍 {repo['name']} をチェック中...")
-        response = requests.get(repo["url"])
+        # headers={...} を追加して「公式アクセス」にするニャ
+        response = requests.get(repo["url"], headers=headers)
         
-        # 正常に取得できたかチェック
         if response.status_code != 200:
-            print(f"⚠️ エラー: {repo['name']} の取得に失敗（Status: {response.status_code}）")
-            print(f"メッセージ: {response.text}") # 理由を表示するニャ
+            print(f"⚠️ {repo['name']} 失敗 (Status: {response.status_code})")
             continue
 
         res = response.json()
-        
-        # tag_nameがあるかチェック
-        if "tag_name" not in res:
-            print(f"❌ {repo['name']} のデータに tag_name がないニャ！")
-            continue
+        if "tag_name" not in res: continue
 
         current_ver = res["tag_name"]
         name = repo["name"]
