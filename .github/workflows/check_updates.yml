@@ -1,5 +1,27 @@
-- name: Run watcher script
+name: Weapon Update Watcher
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run watcher script
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # これを書き足すニャ！
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # ← これが「身分証」を渡す魔法の1行ニャ！
         run: python monitor.py
